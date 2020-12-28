@@ -24,13 +24,13 @@ pub fn run() {
             }
             //part2
             let charletter = letter.chars().collect::<Vec<char>>()[0];
-            let firstIndex = &cap[4].chars().nth(*min as usize - 1).unwrap();
-            let secondIndex = &cap[4].chars().nth(*max as usize - 1).unwrap();
-            let firstMatch = *firstIndex == charletter;
-            let secondMatch = *secondIndex == charletter;
-            if firstMatch && !secondMatch {
+            let first_index = &cap[4].chars().nth(*min as usize - 1).unwrap();
+            let second_index = &cap[4].chars().nth(*max as usize - 1).unwrap();
+            let first_match = *first_index == charletter;
+            let second_match = *second_index == charletter;
+            if first_match && !second_match {
                 validpart2passwords += 1;
-            } else if !firstMatch && secondMatch {
+            } else if !first_match && second_match {
                 validpart2passwords += 1;
             }
         }

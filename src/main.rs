@@ -1,5 +1,6 @@
 mod day1;
 mod day2;
+mod day3;
 
 fn main() {
     // Check what day you want to run
@@ -10,6 +11,8 @@ fn main() {
             day1::run()
         } if arg == "day2" {
             day2::run()
+        } if arg == "day3" {
+            day3::run()
         } else {
             println!("No day selected!");
         }
