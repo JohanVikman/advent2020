@@ -39,15 +39,15 @@ impl Map {
         let mut y = 0;
         let mut ntrees = 0;
         for row in &self.map {
-            if row[(x % self.linelength) as usize] == MapSymbol::Tree
-                {
-                    ntrees += 1;
-                }
-            else {
-                "Open".to_string();
-                }
+            if y == 0 {
+                if row[(x % self.linelength) as usize] == MapSymbol::Tree
+                    {
+                        ntrees += 1;
+                    }
+            y = ystep;
             x += xstep;
-            y += ystep;
+            }
+            y -= 1;
         }
         return ntrees;
     }
@@ -60,10 +60,11 @@ pub fn run() {
 
     let mut map = Map::new(&contents);
 
-    //println!("{}", map);
-    // work with the board (of vectors)
     println!("Part1: N trees are {}", map.count_trees(3, 1));
 
 //Part 2:
-    println!("Part2: Valid passwords {}", 0);
+    let part2trees = map.count_trees(1,1) * map.count_trees(3,1) *
+        map.count_trees(5,1) * map.count_trees(7, 1) *
+        map.count_trees(1, 2);
+    println!("Part2: Valid passwords {}", part2trees);
 }
