@@ -1,16 +1,18 @@
 use std::fs::File;
 use std::io::Read;
+use regex::Regex;
 //use std::str::Chars;
-//use regex::Regex;
 //use std::convert::TryInto;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 enum EyeColor {
     UNDEFINED,
-    BROWN,
     AMBER,
+    BROWN,
     BLUE,
     GREY,
+    GREEN,
+    HAZEL,
     LAZER,
     OTHER
 }
@@ -25,7 +27,7 @@ pub struct Passport {
     cid: u32, //Country ID
     hcl: String, //Hair color
     ecl: EyeColor, //Eye color
-    valid: u32,
+    valid: u32, //Valid passport needs seven valid fields
 }
 
 
@@ -35,9 +37,13 @@ impl Passport {
         let mut iyr: u32 = 0;
         let mut eyr: u32 = 0;
         let mut hgt = "0cm".to_string();
+        let hgtCmRegExp = Regex::new(r"^(\d{3})(cm)$").unwrap();
+        let hgtInRegExp = Regex::new(r"^(\d{2})(in)$").unwrap();
+        let hclRegExp = Regex::new(r"#(?:[a-z]|[0-9]){6}$").unwrap();
         let mut hcl = "".to_string();
         let mut ecl: EyeColor = EyeColor::UNDEFINED;
         let mut pid = "".to_string(); //: u32 = 0;
+        let pidRegExp = Regex::new(r"^\d{9}$").unwrap();
         let mut cid: u32 = 0;
         let mut valid = 0;
 
@@ -49,44 +55,91 @@ impl Passport {
             match key {
                 "byr" => {
                     byr = value.trim().parse::<u32>().unwrap();
-                    valid += 1
-                        },
+                    if (1920 < byr || byr == 1920) {
+                        if (byr < 2002 || byr == 2002) {
+                            println!("byr {} valid!", byr);
+                            valid += 1;
+                            }
+                        }
+                    },
                 "iyr" => {
                     iyr = value.trim().parse::<u32>().unwrap();
-                    valid += 1
+                    if (iyr > 2010 || iyr == 2010) {
+                        if (iyr < 2020 || iyr == 2020) {
+                            println!("iyr {} valid!", iyr);
+                            valid += 1
+                            }
+                        }
                     },
                 "eyr" => {
                     eyr = value.trim().parse::<u32>().unwrap();
-                    valid += 1
-                        },
+                    if (eyr > 2020 || eyr == 2020) {
+                        if (eyr < 2030 || eyr == 2030) {
+                            println!("eyr {} valid!", eyr);
+                            valid += 1
+                            }
+                        }
+                    },
                 "hgt" => {
                     hgt = value.to_string();
-                    valid += 1
-                        },   
+                    if hgtCmRegExp.is_match(&hgt) {
+                        let cap = hgtCmRegExp.captures(&hgt).unwrap();
+                        let cms = &cap[1].trim().parse::<u32>().unwrap();
+                        if cms > &149 && cms < &194 {
+                            println!("hgt {} valid!", hgt);
+                            valid += 1;
+                            }
+                    } else {
+                        if hgtInRegExp.is_match(&hgt) {
+                            let cap = hgtInRegExp.captures(&hgt).unwrap();
+                            let ins = &cap[1].trim().parse::<u32>().unwrap();
+                            if ins > &58 && ins < &77 {
+                                println!("hgt {} valid!", hgt);
+                                valid += 1;
+                                }
+                            }
+                        }
+                    },
                 "pid" => {
                     pid = value.to_string();
-                    valid += 1
-                        }, //value.trim().parse::<u32>().unwrap(),
+                    if pidRegExp.is_match(&pid) {
+                        println!("pid {} valid!", pid);
+                        valid += 1
+                        }
+                    },
                 "cid" => {
                     cid =value.trim().parse::<u32>().unwrap();
-                    valid += 1
-                        },
+                },
                 "hcl" => {
+                    // a # followed by exactly six characters 0-9 or a-f.
                     hcl =value.to_string();
-                    valid += 1
-                        },
+                    if hclRegExp.is_match(&hcl) {
+                        println!("hcl {} valid", hcl);
+                        valid += 1;
+                    } else {
+                        println!("hcl {} INVALID", hcl);
+                    }
+                },
                 "ecl" => {
+                    //amb blu brn gry grn hzl oth.
                     ecl = match value {
                             "brn" => EyeColor::BROWN,
                             "blu" => EyeColor::BLUE,
                             "gry" => EyeColor::GREY,
                             "lzr" => EyeColor::LAZER,
                             "amb" => EyeColor::AMBER,
+                            "oth" => EyeColor::OTHER,
+                            "hzl" => EyeColor::HAZEL,
+                            "grn" => EyeColor::GREEN,
+                            "oth" => EyeColor::OTHER,
                             _ => { println!("Unknown eyecolor {}", value);
-                                EyeColor::OTHER
+                                EyeColor::UNDEFINED
                                 },
                             };
-                    valid += 1
+                    if ecl != EyeColor::UNDEFINED {
+                        println!("ecl {} VALID", value);
+                        valid +=1;
+                    }
                 },
                 _ => println!("Unexpected key {}", key),
             } 
@@ -106,18 +159,17 @@ impl Passport {
     }
 
     pub fn validate(&mut self) -> bool {
-        println!("{:?}", self);
+        //println!("{:?}", self);
         let mut valid = false;
-        /* let vlen: usize= [self.byr, self.iyr, self.eyr].
-            iter().filter(|&x| *x != 0).collect::<Vec<&u32>>().len();
-        let all_numeric_set = vlen == 3; //not looking at cid
-        if !all_numeric_set {
-            println!("XXXXX All numeric NOTset {} {}", all_numeric_set, vlen);
-        }
-        valid = all_numeric_set && (self.hgt != "0cm".to_string()) &&
-            (self.ecl != EyeColor::UNDEFINED) && (self.pid != "".to_string()); */
-        valid = self.valid == 8 || (self.valid == 7 && self.cid == 0);
-        println!("VAlid {} ", valid);
+        /* .
+hgt (Height) - a number followed by either cm or in:
+If cm, the number must be at least 150 and at most 193.
+If in, the number must be at least 59 and at most 76.
+hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+pid (Passport ID) - a nine-digit number, including leading zeroes.
+         */
+        valid = self.valid == 7;
+        println!("VALID {} {}", valid, self.valid);
         return valid;
     }
 }
@@ -142,10 +194,4 @@ pub fn run() {
     }
 
     println!("Part1: {} passports and {} valid", npassports, nvalid);
-
-//Part 2:
-    /* let part2trees = map.count_trees(1,1) * map.count_trees(3,1) *
-        map.count_trees(5,1) * map.count_trees(7, 1) *
-        map.count_trees(1, 2);
-    println!("Part2: Valid passwords {}", part2trees); */
 }
